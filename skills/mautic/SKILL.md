@@ -1,0 +1,193 @@
+---
+name: mautic
+description: >-
+  Mautic marketing automation: manage contacts, segments, emails, and campaigns.
+  Use when the user asks to "list contacts", "send email", "create segment",
+  "check campaign", "search contacts", "add to segment", "mautic", or any
+  marketing automation task involving Mautic.
+---
+
+# mautic-cli
+
+CLI for Mautic marketing automation. Wraps the Mautic REST API (v1, Mautic 4-7).
+
+```bash
+mautic [GLOBAL FLAGS] <resource> <command> [OPTIONS]
+```
+
+## Authentication
+
+Credentials are stored in `~/.mautic-cli/config.json`. Never pass credentials as env vars or CLI arguments - they will be visible in the tool call output.
+
+**If you get a "No Mautic credentials found" error:** Tell the user to run `mautic auth setup` themselves in their terminal. Do NOT attempt to read, create, or write the config file yourself. The setup command is interactive (prompts for password with hidden input) and must be run by the user directly.
+
+## Profiles
+
+Multiple Mautic instances are supported via named profiles:
+
+- `default` - used when no `--profile` flag is passed
+- Named profiles (e.g. `staging`, `production`) - use `--profile <name>`
+
+To check which profiles exist, run:
+```bash
+mautic auth list
+```
+
+When the user mentions a specific Mautic instance (e.g. "the staging mautic", "production mautic"), check available profiles and use the matching `--profile` flag. If unsure which profile to use, ask the user.
+
+## Global Flags
+
+| Flag | Description |
+|------|-------------|
+| `--format json\|table\|csv` | Output format (default: json) |
+| `--pretty` | Pretty-print JSON |
+| `--page-all` | Auto-paginate, output NDJSON (one JSON object per line) |
+| `--dry-run` | Show HTTP request without executing |
+| `--verbose` | Show HTTP request/response details |
+| `--published-only` | Filter to published items only |
+| `--no-verify-ssl` | Skip SSL certificate verification |
+| `--profile NAME` | Use a named config profile |
+
+Global flags go BEFORE the resource group:
+
+```bash
+mautic --pretty --format table contacts list --limit 10
+```
+
+## Resources
+
+### contacts
+
+```bash
+mautic contacts list [--search QUERY] [--limit N] [--offset N] [--order-by FIELD] [--order-dir asc|desc]
+mautic contacts get <ID>
+mautic contacts create --json '{"firstname":"Ana","email":"ana@example.com"}'
+mautic contacts edit <ID> --json '{"lastname":"Silva"}'
+mautic contacts delete <ID>
+mautic contacts add-points <ID> <DELTA>
+mautic contacts subtract-points <ID> <DELTA>
+mautic contacts add-to-segment <CONTACT_ID> <SEGMENT_ID>
+mautic contacts remove-from-segment <CONTACT_ID> <SEGMENT_ID>
+mautic contacts add-to-campaign <CONTACT_ID> <CAMPAIGN_ID>
+mautic contacts remove-from-campaign <CONTACT_ID> <CAMPAIGN_ID>
+mautic contacts activity <ID> [--limit N] [--include-events TYPES] [--exclude-events TYPES]
+```
+
+### segments
+
+```bash
+mautic segments list [--search QUERY] [--limit N] [--offset N]
+mautic segments get <ID>
+mautic segments contacts <ID> [--limit N]
+mautic segments create --json '{"name":"VIP Customers","isPublished":true}'
+mautic segments edit <ID> --json '{"name":"Updated Name"}'
+mautic segments delete <ID>
+mautic segments add-contact <SEGMENT_ID> <CONTACT_ID>
+mautic segments remove-contact <SEGMENT_ID> <CONTACT_ID>
+```
+
+### emails
+
+```bash
+mautic emails list [--search QUERY] [--limit N] [--offset N]
+mautic emails get <ID>
+mautic emails create --json '{"name":"Welcome","subject":"Hello","emailType":"template"}'
+mautic emails edit <ID> --json '{"subject":"Updated"}'
+mautic emails send <EMAIL_ID> --contact <CONTACT_ID>
+mautic emails send-to-segment <EMAIL_ID>
+```
+
+### campaigns
+
+```bash
+mautic campaigns list [--search QUERY] [--limit N] [--offset N]
+mautic campaigns get <ID>
+mautic campaigns contacts <ID> [--limit N]
+mautic campaigns create --json '{"name":"Onboarding","isPublished":true}'
+mautic campaigns edit <ID> --json '{"name":"Updated"}'
+mautic campaigns clone <ID>                          # Mautic 7+ only
+mautic campaigns delete <ID>
+mautic campaigns add-contact <CAMPAIGN_ID> <CONTACT_ID>
+mautic campaigns remove-contact <CAMPAIGN_ID> <CONTACT_ID>
+```
+
+## JSON Input
+
+All write commands (`create`, `edit`) accept JSON in three forms:
+
+```bash
+--json '{"key":"value"}'           # Inline
+--json @contact.json               # From file
+cat data.json | mautic ... --json @-   # From stdin
+```
+
+## Search Syntax
+
+The `--search` flag passes through to Mautic's native search. Examples:
+
+```bash
+--search "email:*@company.com"         # Wildcard email match
+--search "is:published"                # Published items only
+--search "name:Newsletter"             # Name contains
+--search "email:*@company.com is:published"  # Combined
+```
+
+## Pagination
+
+- Default limit: 30, max: 200
+- Use `--page-all` to auto-paginate through all results as NDJSON
+- NDJSON output (one JSON object per line) is ideal for piping to `jq`
+
+```bash
+# Get all contacts as NDJSON
+mautic --page-all contacts list | jq '.fields.all.email'
+
+# Count all published emails
+mautic --page-all --published-only emails list | wc -l
+```
+
+## Output Formats
+
+- `--format json` (default): Full API response with `total` and resource dict
+- `--format table`: Flattened key fields in aligned columns
+- `--format csv`: Flattened key fields as CSV
+
+Table/CSV show these fields per resource:
+- **contacts**: id, firstname, lastname, email, points, dateAdded
+- **segments**: id, name, alias, isPublished, isGlobal
+- **emails**: id, name, subject, emailType, isPublished, readCount
+- **campaigns**: id, name, isPublished, dateAdded
+
+## Safety Rules
+
+> [!CAUTION]
+> **Write commands** (`create`, `edit`, `delete`, `send`, `send-to-segment`, `add-points`, `subtract-points`, `clone`) modify data. Always confirm with the user before executing.
+
+> [!CAUTION]
+> `send` and `send-to-segment` send real emails to real people. Double-check the email ID and recipient before executing.
+
+## Common Workflows
+
+### Find a contact by email
+```bash
+mautic contacts list --search "email:user@example.com"
+```
+
+### Bulk export contacts to CSV
+```bash
+mautic --page-all --format csv contacts list > contacts.csv
+```
+
+### Check campaign performance
+```bash
+mautic --format table campaigns list
+mautic campaigns contacts <CAMPAIGN_ID> --limit 100
+```
+
+### Add contact to segment
+```bash
+# Find the contact
+mautic contacts list --search "email:user@example.com"
+# Add to segment (contact ID, segment ID)
+mautic contacts add-to-segment 42 5
+```
