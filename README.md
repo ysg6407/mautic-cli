@@ -40,8 +40,9 @@
 ## Quick Start
 
 ```bash
-# 1. Install
-uv tool install mautic-cli    # or: pip install mautic-cli
+# 1. Install (or upgrade)
+uv tool install mautic-cli             # or: pip install mautic-cli
+uv tool install --upgrade mautic-cli   # upgrade to latest
 
 # 2. Authenticate
 mautic auth setup
