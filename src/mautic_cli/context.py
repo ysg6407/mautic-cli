@@ -68,6 +68,19 @@ _TABLE_FIELDS = {
     "lists": ["id", "name", "alias", "isPublished", "isGlobal"],
     "emails": ["id", "name", "subject", "emailType", "isPublished", "readCount"],
     "campaigns": ["id", "name", "isPublished", "dateAdded"],
+    "forms": ["id", "name", "alias", "isPublished", "dateAdded"],
+    "companies": ["id", "companyname", "companyemail", "companycity", "companywebsite"],
+    "notes": ["id", "text", "type", "dateTime"],
+    "stages": ["id", "name", "weight", "isPublished"],
+    "assets": ["id", "title", "alias", "downloadCount", "isPublished"],
+    "tags": ["id", "tag"],
+    "categories": ["id", "title", "alias", "bundle", "color"],
+    "pages": ["id", "title", "alias", "isPublished", "hits"],
+    "hooks": ["id", "name", "webhookUrl", "isPublished"],
+    "fields": ["id", "label", "alias", "type", "group"],
+    "reports": ["id", "name", "system", "source"],
+    "points": ["id", "name", "type", "delta", "isPublished"],
+    "triggers": ["id", "name", "points", "isPublished"],
 }
 
 # Map singular API response keys to plural resource keys
@@ -76,6 +89,19 @@ _SINGULAR_TO_PLURAL = {
     "list": "lists",
     "email": "emails",
     "campaign": "campaigns",
+    "form": "forms",
+    "company": "companies",
+    "note": "notes",
+    "stage": "stages",
+    "asset": "assets",
+    "tag": "tags",
+    "category": "categories",
+    "page": "pages",
+    "hook": "hooks",
+    "field": "fields",
+    "report": "reports",
+    "point": "points",
+    "trigger": "triggers",
 }
 
 
@@ -89,8 +115,8 @@ def _flatten_record(record: dict, resource_key: str) -> dict:
     for f in fields:
         if f in record:
             flat[f] = record[f]
-        # Contacts store most fields nested under fields.all
-        elif resource_key == "contacts" and "fields" in record:
+        # Contacts and companies store most fields nested under fields.all
+        elif resource_key in ("contacts", "companies") and "fields" in record:
             all_fields = record["fields"].get("all", {})
             flat[f] = all_fields.get(f, "")
         else:
