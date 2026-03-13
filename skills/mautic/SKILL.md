@@ -1,9 +1,11 @@
 ---
 name: mautic
 description: >-
-  Mautic marketing automation: manage contacts, segments, emails, and campaigns.
-  Use when the user asks to "list contacts", "send email", "create segment",
-  "check campaign", "search contacts", "add to segment", "mautic", or any
+  Mautic marketing automation: manage contacts, segments, emails, campaigns,
+  forms, companies, notes, stages, assets, tags, categories, pages, webhooks,
+  fields, reports, and points. Use when the user asks to "list contacts",
+  "send email", "create segment", "check campaign", "search contacts",
+  "add to segment", "list companies", "create webhook", "mautic", or any
   marketing automation task involving Mautic.
 ---
 
@@ -111,6 +113,100 @@ mautic campaigns add-contact <CAMPAIGN_ID> <CONTACT_ID>
 mautic campaigns remove-contact <CAMPAIGN_ID> <CONTACT_ID>
 ```
 
+### forms
+
+```bash
+mautic forms list [--search QUERY] [--limit N] [--offset N]
+mautic forms get <ID>
+mautic forms submissions <ID> [--limit N]
+mautic forms delete <ID>
+```
+
+### companies
+
+```bash
+mautic companies list [--search QUERY] [--limit N] [--offset N]
+mautic companies get <ID>
+mautic companies create --json '{"companyname":"Acme Inc"}'
+mautic companies edit <ID> --json '{"companyname":"Updated"}'
+mautic companies delete <ID>
+mautic companies add-contact <COMPANY_ID> <CONTACT_ID>
+mautic companies remove-contact <COMPANY_ID> <CONTACT_ID>
+```
+
+### notes
+
+```bash
+mautic notes list --contact <CONTACT_ID> [--search QUERY] [--limit N] [--offset N]
+mautic notes get <ID>
+mautic notes create --json '{"lead":42,"type":"general","text":"Called, no answer"}'
+```
+
+### stages
+
+```bash
+mautic stages list [--search QUERY] [--limit N] [--offset N]
+mautic stages set <CONTACT_ID> <STAGE_ID>
+```
+
+### assets
+
+```bash
+mautic assets list [--search QUERY] [--limit N] [--offset N]
+mautic assets get <ID>
+```
+
+### tags
+
+```bash
+mautic tags list [--search QUERY] [--limit N] [--offset N]
+mautic tags create --json '{"tag":"vip"}'
+```
+
+### categories
+
+```bash
+mautic categories list [--search QUERY] [--limit N] [--offset N] [--bundle TYPE]
+mautic categories create --json '{"title":"Q1 2026","bundle":"email"}'
+```
+
+### pages
+
+```bash
+mautic pages list [--search QUERY] [--limit N] [--offset N]
+mautic pages get <ID>
+```
+
+### webhooks
+
+```bash
+mautic webhooks list [--search QUERY] [--limit N] [--offset N]
+mautic webhooks get <ID>
+mautic webhooks create --json '{"name":"New Lead","webhookUrl":"https://...","triggers":["mautic.lead_post_save_new"]}'
+mautic webhooks delete <ID>
+```
+
+### fields
+
+```bash
+mautic fields list [--search QUERY] [--limit N] [--offset N]
+mautic fields create --json '{"label":"Company Size","type":"number","group":"professional"}'
+```
+
+### reports
+
+```bash
+mautic reports list [--search QUERY] [--limit N] [--offset N]
+mautic reports get <ID>
+```
+
+### points
+
+```bash
+mautic points list [--search QUERY] [--limit N] [--offset N]
+mautic points triggers list [--search QUERY] [--limit N] [--offset N]
+```
+
 ## JSON Input
 
 All write commands (`create`, `edit`) accept JSON in three forms:
@@ -157,6 +253,19 @@ Table/CSV show these fields per resource:
 - **segments**: id, name, alias, isPublished, isGlobal
 - **emails**: id, name, subject, emailType, isPublished, readCount
 - **campaigns**: id, name, isPublished, dateAdded
+- **forms**: id, name, alias, isPublished, dateAdded
+- **companies**: id, companyname, companyemail, companycity, companywebsite
+- **notes**: id, text, type, dateTime
+- **stages**: id, name, weight, isPublished
+- **assets**: id, title, alias, downloadCount, isPublished
+- **tags**: id, tag
+- **categories**: id, title, alias, bundle, color
+- **pages**: id, title, alias, isPublished, hits
+- **webhooks**: id, name, webhookUrl, isPublished
+- **fields**: id, label, alias, type, group
+- **reports**: id, name, system, source
+- **points**: id, name, type, delta, isPublished
+- **triggers**: id, name, points, isPublished
 
 ## Safety Rules
 

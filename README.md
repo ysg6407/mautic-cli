@@ -2,13 +2,13 @@
 
 # mautic-cli
 
-**CLI for Mautic marketing automation - built for humans and AI agents.**
+**Control Mautic from the command line or any AI coding agent.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg)](https://python.org)
 [![Mautic 4.x-7.x](https://img.shields.io/badge/mautic-4.x--7.x-4e5e9e.svg)](https://mautic.org)
 
-[Quick Start](#quick-start) &#183; [Commands](#commands) &#183; [Output Formats](#output-formats) &#183; [AI Agents](#ai-agents)
+[Quick Start](#quick-start) &#183; [Commands](#commands) &#183; [Output Formats](#output-formats)
 
 </div>
 
@@ -22,24 +22,44 @@
 | **Segments** | List, create, edit, delete, add/remove contacts |
 | **Emails** | List, create, edit, send to contact, send to segment |
 | **Campaigns** | List, create, edit, delete, clone (7+), add/remove contacts |
+| **Forms** | List, get, submissions, delete |
+| **Companies** | List, get, create, edit, delete, add/remove contacts |
+| **Notes** | List (per contact), get, create |
+| **Stages** | List, set contact stage |
+| **Assets** | List, get |
+| **Tags** | List, create |
+| **Categories** | List (with bundle filter), create |
+| **Pages** | List, get |
+| **Webhooks** | List, get, create, delete |
+| **Fields** | List, create |
+| **Reports** | List, get |
+| **Points** | List actions, list triggers |
 | **Auth** | Basic Auth, OAuth2 Client Credentials, multiple profiles |
 | **Output** | JSON, colored tables, CSV, NDJSON streaming |
 
 ## Quick Start
 
 ```bash
-# Install (pick one)
-uv tool install mautic-cli    # recommended
-pip install mautic-cli         # or with pip
-pipx install mautic-cli        # or with pipx
+# 1. Install
+uv tool install mautic-cli    # or: pip install mautic-cli
 
-# Authenticate
+# 2. Authenticate
 mautic auth setup
 
-# Use it
+# 3. Use it
 mautic contacts list --limit 5
 mautic --format table emails list
 ```
+
+🤖 **Using an AI agent?** Add the [skill](skills/mautic/SKILL.md) and let your agent handle the rest:
+
+```bash
+npx skills add bloomidea/mautic-cli
+```
+
+> *"list my mautic contacts"* / *"send email 5 to contact 42"* / *"export all contacts to CSV"*
+>
+> Works with [Claude Code, Cursor, Codex, Gemini, Windsurf, and 37+ agents](https://add-skill.org/).
 
 ## Commands
 
@@ -81,6 +101,69 @@ mautic campaigns list
 mautic campaigns get 1
 mautic campaigns contacts 1
 mautic campaigns clone 1    # Mautic 7+ only
+```
+
+### Forms
+
+```bash
+mautic forms list
+mautic forms get 1
+mautic forms submissions 1
+mautic forms delete 1
+```
+
+### Companies
+
+```bash
+mautic companies list
+mautic companies get 1
+mautic companies create --json '{"companyname":"Acme Inc"}'
+mautic companies edit 1 --json '{"companyname":"Updated"}'
+mautic companies delete 1
+mautic companies add-contact 1 42
+mautic companies remove-contact 1 42
+```
+
+### Notes
+
+```bash
+mautic notes list --contact 42
+mautic notes get 1
+mautic notes create --json '{"lead":42,"type":"general","text":"Called, no answer"}'
+```
+
+### Stages & Points
+
+```bash
+mautic stages list
+mautic stages set 42 1         # set contact 42 to stage 1
+mautic points list
+mautic points triggers list
+```
+
+### Assets, Tags, Categories
+
+```bash
+mautic assets list
+mautic assets get 1
+mautic tags list
+mautic tags create --json '{"tag":"vip"}'
+mautic categories list --bundle email
+mautic categories create --json '{"title":"Q1 2026","bundle":"email"}'
+```
+
+### Pages, Webhooks, Fields, Reports
+
+```bash
+mautic pages list
+mautic pages get 1
+mautic webhooks list
+mautic webhooks create --json '{"name":"New Lead","webhookUrl":"https://...","triggers":["mautic.lead_post_save_new"]}'
+mautic webhooks delete 1
+mautic fields list
+mautic fields create --json '{"label":"Company Size","type":"number","group":"professional"}'
+mautic reports list
+mautic reports get 1
 ```
 
 <details>
@@ -161,7 +244,7 @@ Supports **Basic Auth** and **OAuth2 Client Credentials** grant.
 ```bash
 export MAUTIC_BASE_URL=https://mautic.example.com
 export MAUTIC_USERNAME=admin
-export MAUTIC_PASSWORD=secret
+export MAUTIC_PASSWORD=secret        # zsh: use $'p@ss!' if password contains !
 ```
 
 ### Profiles
@@ -207,18 +290,6 @@ Tab-completion for all commands, subcommands, and options:
 ```bash
 mautic completion    # Shows install instructions for your shell
 ```
-
-## AI Agents
-
-mautic-cli ships with an [agent skill](skills/mautic/SKILL.md) that teaches AI coding agents the full command reference, auth flow, and safety rules for write operations.
-
-Install with [`npx skills`](https://github.com/vercel-labs/skills) (supports Claude Code, Cursor, Codex, Gemini, Windsurf, and [37+ agents](https://add-skill.org/)):
-
-```bash
-npx skills add https://github.com/bloomidea/mautic-cli
-```
-
-Then ask your agent: *"list my mautic contacts"* or *"send email 5 to contact 42"*.
 
 ## License
 

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "mautic-cli"
 version = "0.1.0"
-description = "CLI for Mautic marketing automation - built for humans and AI agents."
+description = "Control Mautic from the command line or any AI coding agent."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
