@@ -24,7 +24,7 @@
 | **Segments** | List, create, edit, delete, add/remove contacts |
 | **Emails** | List, create, edit, send to contact, send to segment |
 | **Campaigns** | List, create, edit, delete, clone (7+), add/remove contacts |
-| **Forms** | List, get, submissions, delete |
+| **Forms** | List, create, edit, delete, submissions, embed code |
 | **Companies** | List, get, create, edit, delete, add/remove contacts |
 | **Notes** | List (per contact), get, create |
 | **Stages** | List, set contact stage |
@@ -111,7 +111,13 @@ mautic campaigns clone 1    # Mautic 7+ only
 ```bash
 mautic forms list
 mautic forms get 1
+mautic forms create --json @form.json
+mautic forms edit 1 --json '{"name":"Updated Form"}'
 mautic forms submissions 1
+mautic forms embed 1                    # show JS + iframe embed codes
+mautic forms embed 1 --type js          # script tag only
+mautic forms embed 1 --type iframe      # iframe only
+mautic forms embed 1 --type html        # raw cached HTML
 mautic forms delete 1
 ```
 

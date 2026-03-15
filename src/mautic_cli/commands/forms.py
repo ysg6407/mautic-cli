@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json as json_mod
+from urllib.parse import urlparse
+
 import click
 
 from mautic_cli.context import pass_context, MauticContext
 from mautic_cli.client import MauticApiError
+from mautic_cli.json_input import parse_json_input
 
 
 @click.group()
@@ -56,6 +60,72 @@ def submissions(mctx: MauticContext, id, limit):
     except MauticApiError as e:
         mctx.error(e)
         raise SystemExit(1)
+
+
+@forms.command()
+@click.option("--json", "json_str", required=True, help="JSON data or @file.")
+@pass_context
+def create(mctx: MauticContext, json_str):
+    """Create a new form."""
+    try:
+        payload = parse_json_input(json_str)
+        data = mctx.client.post("/forms/new", json=payload)
+        mctx.output(data)
+    except MauticApiError as e:
+        mctx.error(e)
+        raise SystemExit(1)
+
+
+@forms.command()
+@click.argument("id", type=int)
+@click.option("--json", "json_str", required=True, help="JSON data or @file.")
+@pass_context
+def edit(mctx: MauticContext, id, json_str):
+    """Edit an existing form."""
+    try:
+        payload = parse_json_input(json_str)
+        data = mctx.client.patch(f"/forms/{id}/edit", json=payload)
+        mctx.output(data)
+    except MauticApiError as e:
+        mctx.error(e)
+        raise SystemExit(1)
+
+
+@forms.command()
+@click.argument("id", type=int)
+@click.option("--type", "embed_type", default=None, type=click.Choice(["js", "iframe", "html"]),
+              help="Embed type: js (script tag), iframe, or html (raw cachedHtml). Omit to show all.")
+@pass_context
+def embed(mctx: MauticContext, id, embed_type):
+    """Get form embed code."""
+    base = mctx.client.base_url.rstrip("/")
+    parsed = urlparse(base)
+    host = parsed.hostname
+    if parsed.port and parsed.port not in (80, 443):
+        host = f"{host}:{parsed.port}"
+
+    js_code = f'<script type="text/javascript" src="//{host}/form/generate.js?id={id}"></script>'
+    iframe_code = (f'<iframe src="//{host}/form/{id}" width="300" height="300">'
+                   f"<p>Your browser does not support iframes.</p></iframe>")
+
+    if embed_type == "js":
+        click.echo(js_code)
+    elif embed_type == "iframe":
+        click.echo(iframe_code)
+    elif embed_type == "html":
+        try:
+            data = mctx.client.get(f"/forms/{id}")
+            form = data.get("form", data)
+            click.echo(form.get("cachedHtml", ""))
+        except MauticApiError as e:
+            mctx.error(e)
+            raise SystemExit(1)
+    else:
+        click.echo("Via Javascript (recommended)")
+        click.echo(js_code)
+        click.echo()
+        click.echo("Via iframe")
+        click.echo(iframe_code)
 
 
 @forms.command()

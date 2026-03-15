@@ -118,7 +118,10 @@ mautic campaigns remove-contact <CAMPAIGN_ID> <CONTACT_ID>
 ```bash
 mautic forms list [--search QUERY] [--limit N] [--offset N]
 mautic forms get <ID>
+mautic forms create --json '<DATA>'
+mautic forms edit <ID> --json '<DATA>'
 mautic forms submissions <ID> [--limit N]
+mautic forms embed <ID> [--type js|iframe|html]
 mautic forms delete <ID>
 ```
 

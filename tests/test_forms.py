@@ -52,6 +52,71 @@ class TestForms:
         assert result.exit_code == 0
 
     @respx.mock
+    def test_create_form(self):
+        respx.post("https://mautic.test/api/forms/new").mock(
+            return_value=httpx.Response(200, json={
+                "form": {"id": 5, "name": "New Form"},
+            })
+        )
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, [
+            "forms", "create",
+            "--json", '{"name": "New Form", "formType": "standalone", "postAction": "message", "postActionProperty": "Thanks!"}'
+        ])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["form"]["name"] == "New Form"
+
+    @respx.mock
+    def test_edit_form(self):
+        respx.patch("https://mautic.test/api/forms/5/edit").mock(
+            return_value=httpx.Response(200, json={
+                "form": {"id": 5, "name": "Updated Form"},
+            })
+        )
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, [
+            "forms", "edit", "5",
+            "--json", '{"name": "Updated Form"}'
+        ])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["form"]["name"] == "Updated Form"
+
+    def test_embed_default(self):
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, ["forms", "embed", "4"])
+        assert result.exit_code == 0
+        assert "Via Javascript (recommended)" in result.output
+        assert "Via iframe" in result.output
+        assert "generate.js?id=4" in result.output
+        assert 'src="//mautic.test/form/4"' in result.output
+
+    def test_embed_js(self):
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, ["forms", "embed", "4", "--type", "js"])
+        assert result.exit_code == 0
+        assert result.output.strip() == '<script type="text/javascript" src="//mautic.test/form/generate.js?id=4"></script>'
+
+    def test_embed_iframe(self):
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, ["forms", "embed", "4", "--type", "iframe"])
+        assert result.exit_code == 0
+        assert 'src="//mautic.test/form/4"' in result.output
+
+    @respx.mock
+    def test_embed_html(self):
+        respx.get("https://mautic.test/api/forms/4").mock(
+            return_value=httpx.Response(200, json={
+                "form": {"id": 4, "name": "Test", "cachedHtml": "<div>form html</div>"},
+            })
+        )
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, ["forms", "embed", "4", "--type", "html"])
+        assert result.exit_code == 0
+        assert result.output.strip() == "<div>form html</div>"
+
+    @respx.mock
     def test_delete_form(self):
         respx.delete("https://mautic.test/api/forms/1/delete").mock(
             return_value=httpx.Response(200, json={"form": {"id": 1}})
