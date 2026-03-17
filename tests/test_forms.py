@@ -117,6 +117,66 @@ class TestForms:
         assert result.output.strip() == "<div>form html</div>"
 
     @respx.mock
+    def test_form_submissions_with_offset(self):
+        respx.get("https://mautic.test/api/forms/1/submissions").mock(
+            return_value=httpx.Response(200, json={
+                "total": "5",
+                "submissions": {"12": {"id": 12}},
+            })
+        )
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, ["forms", "submissions", "1", "--offset", "3", "--limit", "2"])
+        assert result.exit_code == 0
+
+    @respx.mock
+    def test_form_submissions_page_all(self):
+        route = respx.get("https://mautic.test/api/forms/1/submissions")
+        route.side_effect = [
+            httpx.Response(200, json={
+                "total": "3",
+                "submissions": {"10": {"id": 10}, "11": {"id": 11}},
+            }),
+            httpx.Response(200, json={
+                "total": "3",
+                "submissions": {"12": {"id": 12}},
+            }),
+        ]
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, ["--page-all", "forms", "submissions", "1", "--limit", "2"])
+        assert result.exit_code == 0
+        lines = result.output.strip().split("\n")
+        assert len(lines) == 3
+        assert json.loads(lines[0])["id"] == 10
+        assert json.loads(lines[2])["id"] == 12
+
+    @respx.mock
+    def test_get_submission(self):
+        respx.get("https://mautic.test/api/forms/1/submissions/10").mock(
+            return_value=httpx.Response(200, json={
+                "submission": {"id": 10, "form": {"id": 1}},
+            })
+        )
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, ["forms", "submission", "1", "10"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["submission"]["id"] == 10
+
+    @respx.mock
+    def test_contact_submissions(self):
+        respx.get("https://mautic.test/api/forms/1/submissions/contact/5").mock(
+            return_value=httpx.Response(200, json={
+                "total": "1",
+                "submissions": {"10": {"id": 10, "lead": {"id": 5}}},
+            })
+        )
+        runner = CliRunner(env=MOCK_ENV)
+        result = runner.invoke(cli, ["forms", "contact-submissions", "1", "5"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["total"] == "1"
+
+    @respx.mock
     def test_delete_form(self):
         respx.delete("https://mautic.test/api/forms/1/delete").mock(
             return_value=httpx.Response(200, json={"form": {"id": 1}})

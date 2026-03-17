@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.5] - 2026-03-17
+
+### Added
+
+- `forms submission <FORM_ID> <SUBMISSION_ID>` - get a specific form submission by ID
+- `forms contact-submissions <FORM_ID> <CONTACT_ID>` - get submissions for a contact on a form
+- `forms submissions` now supports `--offset` for manual pagination and `--page-all` for auto-pagination
+
+---
+
 ## [0.1.3] - 2026-03-13
 
 ### Changed

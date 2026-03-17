@@ -51,11 +51,52 @@ def get(mctx: MauticContext, id):
 @forms.command()
 @click.argument("id", type=int)
 @click.option("--limit", default=30, type=int)
+@click.option("--offset", default=0, type=int, help="Starting offset.")
 @pass_context
-def submissions(mctx: MauticContext, id, limit):
+def submissions(mctx: MauticContext, id, limit, offset):
     """List form submissions."""
     try:
-        data = mctx.client.get(f"/forms/{id}/submissions", params={"limit": limit})
+        if mctx.page_all:
+            for record in mctx.client.get_all(
+                f"/forms/{id}/submissions",
+                resource_key="submissions",
+                limit=limit,
+                params={"start": offset},
+            ):
+                click.echo(json_mod.dumps(record, ensure_ascii=False))
+        else:
+            data = mctx.client.get(
+                f"/forms/{id}/submissions",
+                params={"limit": limit, "start": offset},
+            )
+            mctx.output(data)
+    except MauticApiError as e:
+        mctx.error(e)
+        raise SystemExit(1)
+
+
+@forms.command("submission")
+@click.argument("form_id", type=int)
+@click.argument("submission_id", type=int)
+@pass_context
+def get_submission(mctx: MauticContext, form_id, submission_id):
+    """Get a specific form submission by ID."""
+    try:
+        data = mctx.client.get(f"/forms/{form_id}/submissions/{submission_id}")
+        mctx.output(data)
+    except MauticApiError as e:
+        mctx.error(e)
+        raise SystemExit(1)
+
+
+@forms.command("contact-submissions")
+@click.argument("form_id", type=int)
+@click.argument("contact_id", type=int)
+@pass_context
+def contact_submissions(mctx: MauticContext, form_id, contact_id):
+    """Get submissions for a specific contact on a form."""
+    try:
+        data = mctx.client.get(f"/forms/{form_id}/submissions/contact/{contact_id}")
         mctx.output(data)
     except MauticApiError as e:
         mctx.error(e)
