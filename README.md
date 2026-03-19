@@ -16,6 +16,21 @@
 
 ---
 
+## How it works
+
+Mautic-CLI runs on **your local machine** (laptop, desktop, CI server) and connects to your Mautic instance remotely via its REST API. You don't install anything on your Mautic server - you just need to enable the API there.
+
+```
+┌──────────────────┐         HTTPS          ┌──────────────────┐
+│  Your computer   │ ────── API calls ─────▶│  Mautic server   │
+│  (mautic-cli)    │ ◀──── JSON responses ──│  (any hosting)   │
+└──────────────────┘                        └──────────────────┘
+```
+
+**On your Mautic server:** Go to Settings > API Settings, enable the API, and enable Basic Authentication (or set up OAuth2 credentials).
+
+**On your machine:** Install the CLI and run `mautic auth setup` - see Quick Start below.
+
 ## What it does
 
 | Category | Capabilities |
@@ -41,18 +56,34 @@
 
 ## Quick Start
 
+No Python knowledge needed. The recommended installer, [uv](https://docs.astral.sh/uv/), handles everything including Python itself:
+
 ```bash
-# 1. Install (or upgrade)
-uv tool install mautic-cli             # or: pip install mautic-cli
+# 0. Install uv (one-time) — see https://docs.astral.sh/uv/getting-started/installation/
+curl -LsSf https://astral.sh/uv/install.sh | sh      # macOS / Linux
+# powershell -c "irm https://astral.sh/uv/install.ps1 | iex"   # Windows
+
+# 1. Install mautic-cli (uv downloads the right Python automatically)
+uv tool install mautic-cli
 uv tool install --upgrade mautic-cli   # upgrade to latest
 
-# 2. Authenticate
+# 2. Authenticate (connects to your remote Mautic instance)
 mautic auth setup
 
 # 3. Use it
 mautic contacts list --limit 5
 mautic --format table emails list
 ```
+
+<details>
+<summary><strong>Alternative: install with pip</strong></summary>
+
+If you already have Python 3.11+ installed and prefer pip:
+
+```bash
+pip install mautic-cli
+```
+</details>
 
 🤖 **Using an AI agent?** Add the [skill](skills/mautic/SKILL.md) and let your agent handle the rest:
 
